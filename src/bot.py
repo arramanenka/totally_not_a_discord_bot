@@ -30,4 +30,12 @@ class TotallyNotBot(discord.Client):
                 csv_file.write('Name,count')
                 for key, count in flag_dict.items():
                     csv_file.write(f'\n{key},{count}')
-            await message.channel.send('updated')
+            await message.channel.send('I am a good boy, I updated your map!',
+                                       file=discord.File(filename='map.csv', fp='map.csv'))
+        elif actual_message == 'get map':
+            await message.channel.send(file=discord.File(filename='map.csv', fp='map.csv'))
+        elif actual_message == 'help':
+            await message.channel.send(
+                'To update map, write \'update map\', to map that was already created, write \'get map\'')
+        else:
+            await message.channel.send('Command not recognized, try help')
