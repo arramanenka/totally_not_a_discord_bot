@@ -1,6 +1,7 @@
 import re
 
 import discord
+import json
 
 from src.util import find_flags
 
@@ -24,4 +25,4 @@ class TotallyNotBot(discord.Client):
                     flags = find_flags(message.author.nick)
                     for flag in flags:
                         flag_dict[flag] = flag_dict.get(flag, 0) + 1
-            await message.channel.send(flag_dict)
+            await message.channel.send(json.dumps(flag_dict))
