@@ -36,6 +36,7 @@ class TotallyNotBot(discord.Client):
             await message.channel.send(file=discord.File(filename='map.csv', fp='map.csv'))
         elif actual_message == 'help':
             await message.channel.send(
-                'To update map, write \'update map\', to map that was already created, write \'get map\'')
+                'To update map, write \'update map\', to map that was already created, write \'get map\'. I generate '
+                'csv for https://www.datawrapper.de/maps/')
         else:
             await message.channel.send('Command not recognized, try help')
