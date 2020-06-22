@@ -17,22 +17,32 @@ class TotallyNotBot(discord.Client):
             if mention.id == self.user.id:
                 await self.reply_to_direct(message)
 
-    @staticmethod
-    async def reply_to_direct(message):
+    async def reply_to_direct(self, message):
+        if message.author.bot:
+            return
         actual_message = re.sub(r'<.*>', '', message.content).strip()
         if actual_message == 'update map':
             guild = message.channel.guild
             TotallyNotBot.save_guild_member_map(guild)
-            await message.channel.send('I am a good boy, I updated your map!',
-                                       file=discord.File(filename='map.csv', fp='map.csv'))
+            await self.send_dm(message.author, file='map.csv')
+            await message.channel.send('I am a good boy, I updated your map! Check your dms')
         elif actual_message == 'get map':
-            await message.channel.send(file=discord.File(filename='map.csv', fp='map.csv'))
+            await self.send_dm(message.author, file='map.csv')
+            await message.channel.send('Sent csv to your dms')
         elif actual_message == 'help':
-            await message.channel.send(
-                'To update map, write \'update map\', to map that was already created, write \'get map\'. I generate '
-                'csv for www.datawrapper.de/maps/')
+            await self.send_dm(message.author,
+                               message='To update map, write \'update map\', to map that was already created, '
+                                       'write \'get map\'. I generate csv for https://www.datawrapper.de/maps/')
         else:
             await message.channel.send('Command not recognized, try help')
+
+    @staticmethod
+    async def send_dm(member, message=None, file=None):
+        await member.create_dm()
+        if file is not None:
+            await member.dm_channel.send(file=discord.File(filename=file, fp=file))
+        else:
+            await member.dm_channel.send(message)
 
     @staticmethod
     def save_guild_member_map(guild):
