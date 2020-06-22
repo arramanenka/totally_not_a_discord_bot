@@ -24,10 +24,10 @@ class TotallyNotBot(discord.Client):
         if actual_message == 'update map':
             guild = message.channel.guild
             TotallyNotBot.save_guild_member_map(guild)
-            await self.send_dm(message.author, file='map.csv')
+            await self.send_dm(message.author, file=f'{guild.id}.csv')
             await message.channel.send('I am a good boy, I updated your map! Check your dms')
         elif actual_message == 'get map':
-            await self.send_dm(message.author, file='map.csv')
+            await self.send_dm(message.author, file=f'{message.channel.guild.id}.csv')
             await message.channel.send('Sent csv to your dms')
         elif actual_message == 'help':
             await self.send_dm(message.author,
