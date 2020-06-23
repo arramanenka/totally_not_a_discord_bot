@@ -5,7 +5,7 @@ import re
 import discord
 import pycountry
 
-from src.util import find_flags
+from src.util import find_flags, check_presence
 
 
 class TotallyNotBot(discord.Client):
@@ -41,14 +41,16 @@ class TotallyNotBot(discord.Client):
                         rules['ask_first'] = users
                     elif r.emoji == '🌑':
                         rules['closed'] = users
-                if 'closed' in rules:
-                    for member in rules['closed']:
-                        if member in rules['open']:
-                            rules['open'].remove(member)
-                        if member in rules['ask_first']:
-                            rules['ask_first'].remove(member)
+                rules.setdefault('open', [])
+                rules.setdefault('ask_first', [])
+                rules.setdefault('closed', [])
+                for member in rules['closed']:
+                    if check_presence(member, 'open', rules):
+                        rules['open'].remove(member)
+                    if check_presence(member, 'ask_first', rules):
+                        rules['ask_first'].remove(member)
                 for member in rules['ask_first']:
-                    if member in rules['open']:
+                    if check_presence(member, 'open', rules):
                         rules['open'].remove(member)
                 closed_dms_role_name = 'Closed DMs'
                 ask_first_dms_role_name = 'Ask First'
@@ -56,8 +58,7 @@ class TotallyNotBot(discord.Client):
                 all_roles = {open_dms_role_name, ask_first_dms_role_name, closed_dms_role_name}
                 await self.assign_role_if_not_present(rules['open'], open_dms_role_name, all_roles)
                 await self.assign_role_if_not_present(rules['ask_first'], ask_first_dms_role_name, all_roles)
-                if 'closed' in rules:
-                    await self.assign_role_if_not_present(rules['closed'], closed_dms_role_name, all_roles)
+                await self.assign_role_if_not_present(rules['closed'], closed_dms_role_name, all_roles)
             await asyncio.sleep(20)
         pass
 
