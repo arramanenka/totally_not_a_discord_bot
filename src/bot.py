@@ -8,33 +8,6 @@ import pycountry
 from src.util import find_flags
 
 
-def assign_role_if_not_present(members, role_name, conflicting_roles=None):
-    for member in members:
-        if type(member) is discord.User:
-            # it is a member, who left server, so we cannot assign or remove any roles
-            continue
-        if conflicting_roles is not None:
-            for conflicting_role in conflicting_roles:
-                if conflicting_role == role_name:
-                    continue
-                found_role = discord.utils.find(lambda role: role.name == conflicting_role, member.roles)
-                if found_role is not None:
-                    remove_role_from_member(member, found_role)
-        found_role = discord.utils.find(lambda role: role.name == role_name, member.roles)
-        if found_role is None:
-            assign_role_to_member(member, role_name)
-            pass
-    pass
-
-
-def assign_role_to_member(member, role):
-    print(f'assigning {role} to  {member}')
-
-
-def remove_role_from_member(member, role):
-    print(f'member {member} should not have {role}')
-
-
 class TotallyNotBot(discord.Client):
 
     def __init__(self, *, loop=None, **options):
@@ -43,10 +16,12 @@ class TotallyNotBot(discord.Client):
         self.open_dm_rule_message_id = int(os.getenv('OPEN_DM_RULE_MESSAGE_ID') or '708210555156037662')
         self.rule_channel_name = os.getenv('RULE_CHANNEL_NAME') or 'rules'
         self.rule_channel = None
+        self.dm_rule_guild = None
 
     async def on_ready(self):
         print(f'{self.user} has connected to Discord!')
         guild = discord.utils.find(lambda g: g.id == self.guild_id, self.guilds)
+        self.dm_rule_guild = guild
         if guild and self.open_dm_rule_message_id is not None:
             self.rule_channel = discord.utils.find(lambda c: c.name == self.rule_channel_name, guild.channels)
             self.loop.create_task(self.update_rule_roles())
@@ -54,6 +29,7 @@ class TotallyNotBot(discord.Client):
 
     async def update_rule_roles(self):
         while True:
+            print('checking roles')
             if self.rule_channel is not None and self.open_dm_rule_message_id is not None:
                 msg = await self.rule_channel.fetch_message(self.open_dm_rule_message_id)
                 rules = dict()
@@ -74,13 +50,54 @@ class TotallyNotBot(discord.Client):
                 for member in rules['ask_first']:
                     if member in rules['open']:
                         rules['open'].remove(member)
-                all_roles = {'Open DMs', 'Ask First', 'Closed DMs'}
-                assign_role_if_not_present(rules['open'], 'Open DMs', all_roles)
-                assign_role_if_not_present(rules['ask_first'], 'Ask First', all_roles)
+                closed_dms_role_name = 'Closed DMs'
+                ask_first_dms_role_name = 'Ask First'
+                open_dms_role_name = 'Open DMs'
+                all_roles = {open_dms_role_name, ask_first_dms_role_name, closed_dms_role_name}
+                await self.assign_role_if_not_present(rules['open'], open_dms_role_name, all_roles)
+                await self.assign_role_if_not_present(rules['ask_first'], ask_first_dms_role_name, all_roles)
                 if 'closed' in rules:
-                    assign_role_if_not_present(rules['closed'], 'Closed DMs', all_roles)
+                    await self.assign_role_if_not_present(rules['closed'], closed_dms_role_name, all_roles)
             await asyncio.sleep(20)
         pass
+
+    async def assign_role_if_not_present(self, members, role_name, conflicting_roles=None):
+        for member in members:
+            if type(member) is discord.User:
+                # it is a member, who left server, so we cannot assign or remove any roles
+                continue
+            if conflicting_roles is not None:
+                for conflicting_role in conflicting_roles:
+                    if conflicting_role == role_name:
+                        continue
+                    found_role = discord.utils.find(lambda role: role.name == conflicting_role, member.roles)
+                    if found_role is not None:
+                        await self.remove_role_from_member(member, conflicting_role)
+            found_role = discord.utils.find(lambda role: role.name == role_name, member.roles)
+            if found_role is None:
+                await self.assign_role_to_member(member, role_name)
+                pass
+        pass
+
+    async def manage_roles_for_user(self, member, role, action):
+        actual_role = discord.utils.get(self.dm_rule_guild.roles, name=role)
+        if actual_role is not None:
+            await action(actual_role)
+        else:
+            print(f'Could not find role {role} on server')
+        pass
+
+    async def assign_role_to_member(self, member, role):
+        async def assign_role(actual_role):
+            await member.add_roles(actual_role)
+            print(f'assigned {role} to  {member}')
+        await self.manage_roles_for_user(member, role, assign_role)
+
+    async def remove_role_from_member(self, member, role):
+        async def remove_role(actual_role):
+            await member.remove_roles(actual_role)
+            print(f'removed role {role} from {member}')
+        await self.manage_roles_for_user(member, role, remove_role)
 
     async def on_message(self, message):
         for mention in message.mentions:
