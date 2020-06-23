@@ -8,6 +8,33 @@ import pycountry
 from src.util import find_flags
 
 
+def assign_role_if_not_present(members, role_name, conflicting_roles=None):
+    for member in members:
+        if type(member) is discord.User:
+            # it is a member, who left server, so we cannot assign or remove any roles
+            continue
+        if conflicting_roles is not None:
+            for conflicting_role in conflicting_roles:
+                if conflicting_role == role_name:
+                    continue
+                found_role = discord.utils.find(lambda role: role.name == conflicting_role, member.roles)
+                if found_role is not None:
+                    remove_role_from_member(member, found_role)
+        found_role = discord.utils.find(lambda role: role.name == role_name, member.roles)
+        if found_role is None:
+            assign_role_to_member(member, role_name)
+            pass
+    pass
+
+
+def assign_role_to_member(member, role):
+    print(f'assigning {role} to  {member}')
+
+
+def remove_role_from_member(member, role):
+    print(f'member {member} should not have {role}')
+
+
 class TotallyNotBot(discord.Client):
 
     def __init__(self, *, loop=None, **options):
@@ -27,18 +54,31 @@ class TotallyNotBot(discord.Client):
 
     async def update_rule_roles(self):
         while True:
-            print()
             if self.rule_channel is not None and self.open_dm_rule_message_id is not None:
                 msg = await self.rule_channel.fetch_message(self.open_dm_rule_message_id)
-                print(msg)
+                rules = dict()
                 for r in msg.reactions:
                     users = await r.users().flatten()
                     if r.emoji == '🌕':
-                        print(f'opend dms users: {users}')
+                        rules['open'] = users
                     elif r.emoji == '🌗':
-                        print(f'ask first for dm users: {users}')
+                        rules['ask_first'] = users
                     elif r.emoji == '🌑':
-                        print(f'closed dms users {users}')
+                        rules['closed'] = users
+                if 'closed' in rules:
+                    for member in rules['closed']:
+                        if member in rules['open']:
+                            rules['open'].remove(member)
+                        if member in rules['ask_first']:
+                            rules['ask_first'].remove(member)
+                for member in rules['ask_first']:
+                    if member in rules['open']:
+                        rules['open'].remove(member)
+                all_roles = {'Open DMs', 'Ask First', 'Closed DMs'}
+                assign_role_if_not_present(rules['open'], 'Open DMs', all_roles)
+                assign_role_if_not_present(rules['ask_first'], 'Ask First', all_roles)
+                if 'closed' in rules:
+                    assign_role_if_not_present(rules['closed'], 'Closed DMs', all_roles)
             await asyncio.sleep(20)
         pass
 
