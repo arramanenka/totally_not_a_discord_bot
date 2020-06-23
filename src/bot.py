@@ -1,3 +1,5 @@
+import asyncio
+import os
 import re
 
 import discord
@@ -7,10 +9,38 @@ from src.util import find_flags
 
 
 class TotallyNotBot(discord.Client):
+
+    def __init__(self, *, loop=None, **options):
+        super().__init__(loop=loop, **options)
+        self.guild_id = int(os.getenv('GUILD_ID') or '698825558712254494')
+        self.open_dm_rule_message_id = int(os.getenv('OPEN_DM_RULE_MESSAGE_ID') or '708210555156037662')
+        self.rule_channel_name = os.getenv('RULE_CHANNEL_NAME') or 'rules'
+        self.rule_channel = None
+
     async def on_ready(self):
         print(f'{self.user} has connected to Discord!')
-        for g in self.guilds:
-            self.save_guild_member_map(g)
+        guild = discord.utils.find(lambda g: g.id == self.guild_id, self.guilds)
+        if guild and self.open_dm_rule_message_id is not None:
+            self.rule_channel = discord.utils.find(lambda c: c.name == self.rule_channel_name, guild.channels)
+            self.loop.create_task(self.update_rule_roles())
+            self.save_guild_member_map(guild)
+
+    async def update_rule_roles(self):
+        while True:
+            print()
+            if self.rule_channel is not None and self.open_dm_rule_message_id is not None:
+                msg = await self.rule_channel.fetch_message(self.open_dm_rule_message_id)
+                print(msg)
+                for r in msg.reactions:
+                    users = await r.users().flatten()
+                    if r.emoji == '🌕':
+                        print(f'opend dms users: {users}')
+                    elif r.emoji == '🌗':
+                        print(f'ask first for dm users: {users}')
+                    elif r.emoji == '🌑':
+                        print(f'closed dms users {users}')
+            await asyncio.sleep(20)
+        pass
 
     async def on_message(self, message):
         for mention in message.mentions:
