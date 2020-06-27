@@ -103,7 +103,7 @@ class TotallyNotBot(discord.Client):
 
     async def on_message(self, message):
         if message.content is not None:
-            if 'pizza' in message.content:
+            if message.content.lower() == 'pizza':
                 await message.add_reaction('🍍')
         for mention in message.mentions:
             if mention.id == self.user.id:
