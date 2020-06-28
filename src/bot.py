@@ -102,9 +102,8 @@ class TotallyNotBot(discord.Client):
         await self.manage_roles_for_user(member, role, remove_role)
 
     async def on_message(self, message):
-        if message.content is not None:
-            if message.content.lower() == 'pizza' or message.content.lower() == 'plzza' or message.content.lower() == 'p1zza':
-                await message.add_reaction('🍍')
+        if message.content is not None or any(p in message.content.lower() for p in ['pizza', 'plzza', 'p1zza']):
+            await message.add_reaction('🍍')
         for mention in message.mentions:
             if mention.id == self.user.id:
                 await self.reply_to_direct(message)
