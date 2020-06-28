@@ -4,7 +4,6 @@ import re
 
 import discord
 import pycountry
-from discord.utils import get
 
 from src.util import find_flags, check_presence
 
@@ -93,16 +92,18 @@ class TotallyNotBot(discord.Client):
         async def assign_role(actual_role):
             await member.add_roles(actual_role)
             print(f'assigned {role} to  {member}')
+
         await self.manage_roles_for_user(member, role, assign_role)
 
     async def remove_role_from_member(self, member, role):
         async def remove_role(actual_role):
             await member.remove_roles(actual_role)
             print(f'removed role {role} from {member}')
+
         await self.manage_roles_for_user(member, role, remove_role)
 
     async def on_message(self, message):
-        if message.content is not None or any(p in message.content.lower() for p in ['pizza', 'plzza', 'p1zza']):
+        if message.content is not None and any(p in message.content.lower() for p in ['pizza', 'plzza', 'p1zza']):
             await message.add_reaction('🍍')
         for mention in message.mentions:
             if mention.id == self.user.id:
