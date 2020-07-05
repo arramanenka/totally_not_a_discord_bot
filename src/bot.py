@@ -59,7 +59,7 @@ class TotallyNotBot(discord.Client):
                 await self.assign_role_if_not_present(rules['open'], open_dms_role_name, all_roles)
                 await self.assign_role_if_not_present(rules['ask_first'], ask_first_dms_role_name, all_roles)
                 await self.assign_role_if_not_present(rules['closed'], closed_dms_role_name, all_roles)
-            await asyncio.sleep(60)
+            await asyncio.sleep(3600)
         pass
 
     async def assign_role_if_not_present(self, members, role_name, conflicting_roles=None):
