@@ -160,6 +160,8 @@ class TotallyNotBot(discord.Client):
                     if country_name not in added_flags:
                         added_flags.append(country_name)
                         flag_dict[country_name] = flag_dict.get(country_name, 0) + 1
+                        if country_name is 'USA':
+                            print(f'{m.nick} is from US')
         with open(f'{guild.id}.csv', mode='w+', encoding='utf-8') as csv_file:
             csv_file.write('ISO-Code,count')
             for key, count in flag_dict.items():
