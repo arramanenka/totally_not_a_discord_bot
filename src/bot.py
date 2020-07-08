@@ -53,7 +53,7 @@ class TotallyNotBot(discord.Client):
                     if check_presence(member, 'open', rules):
                         rules['open'].remove(member)
                 closed_dms_role_name = 'Closed DMs'
-                ask_first_dms_role_name = 'Ask First'
+                ask_first_dms_role_name = 'Ask First DMs'
                 open_dms_role_name = 'Open DMs'
                 all_roles = {open_dms_role_name, ask_first_dms_role_name, closed_dms_role_name}
                 await self.assign_role_if_not_present(rules['open'], open_dms_role_name, all_roles)
@@ -85,7 +85,7 @@ class TotallyNotBot(discord.Client):
         if actual_role is not None:
             await action(actual_role)
         else:
-            print(f'Could not find role {role} on server')
+            print(f'Could not find role {role} on server, so cannot assign it to {member}')
         pass
 
     async def assign_role_to_member(self, member, role):
@@ -160,8 +160,6 @@ class TotallyNotBot(discord.Client):
                     if country_name not in added_flags:
                         added_flags.append(country_name)
                         flag_dict[country_name] = flag_dict.get(country_name, 0) + 1
-                        if country_name is 'USA':
-                            print(f'{m.nick} is from US')
         with open(f'{guild.id}.csv', mode='w+', encoding='utf-8') as csv_file:
             csv_file.write('ISO-Code,count')
             for key, count in flag_dict.items():
