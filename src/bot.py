@@ -148,13 +148,17 @@ class TotallyNotBot(discord.Client):
             await message.channel.send('Command not recognized, try help')
 
     async def process_game_request(self, message, actual_message):
-        if get(message.author.roles, name='Maintenance Key') is None:
-            await message.channel.send(f'Sorry, {message.author.nick}, you ain\'t a mod')
+        if get(message.author.roles, name='Maintenance Key') is None \
+                and get(message.author.roles, name='Moderator') is None:
+            await message.channel.send(f'Sorry, {message.author.nick}, you ain\'t a mod, or a beautiful maintainer')
             return
         if actual_message.startswith('game_start'):
             if self.game_object is None:
                 if actual_message == 'game_start pick-a-person':
                     self.game_object = PickAPersonGame()
+                    started = await self.game_object.start(message)
+                    if not started:
+                        self.game_object = None
                 else:
                     await message.channel.send("Unrecognized game. Please try again")
             else:
