@@ -116,16 +116,18 @@ class TotallyNotBot(discord.Client):
         actual_message = re.sub(r'<.*>', '', message.content).strip()
         if actual_message == 'update map':
             guild = message.channel.guild
+            member_map = TotallyNotBot.save_guild_member_map(guild, False)
+            await self.send_dm(message.author, member_map)
+            await message.channel.send('I am a good boy, I updated your map! Check your dms')
+        elif actual_message == 'update map iso':
+            guild = message.channel.guild
             TotallyNotBot.save_guild_member_map(guild)
             await self.send_dm(message.author, file=f'{guild.id}.csv')
             await message.channel.send('I am a good boy, I updated your map! Check your dms')
-        elif actual_message == 'get map':
-            await self.send_dm(message.author, file=f'{message.channel.guild.id}.csv')
-            await message.channel.send('Sent csv to your dms')
         elif actual_message == 'help':
             await self.send_dm(message.author,
-                               message='To update map, write \'update map\', to map that was already created, '
-                                       'write \'get map\'. I generate csv for https://www.datawrapper.de/maps/')
+                               message='To update map, write \'update map\'.'
+                                       ' I generate csv for https://www.datawrapper.de/maps/')
         else:
             await message.channel.send('Command not recognized, try help')
 
@@ -138,7 +140,7 @@ class TotallyNotBot(discord.Client):
             await member.dm_channel.send(message)
 
     @staticmethod
-    def save_guild_member_map(guild):
+    def save_guild_member_map(guild, use_iso=True):
         flag_dict = dict()
         for m in guild.members:
             if not m.bot:
@@ -159,8 +161,14 @@ class TotallyNotBot(discord.Client):
                     country_name = country.alpha_3
                     if country_name not in added_flags:
                         added_flags.append(country_name)
-                        flag_dict[country_name] = flag_dict.get(country_name, 0) + 1
+                        flag_dict.setdefault(country_name, 0)
+                        flag_dict[country_name] = flag_dict[country_name] + 1
+        results = []
+        for key in sorted(flag_dict, key=flag_dict.get):
+            result = f'\n{key if use_iso else pycountry.countries.get(alpha_3=key).name},{flag_dict[key]}'
+            results.append(result)
+        output = ''.join(results)
         with open(f'{guild.id}.csv', mode='w+', encoding='utf-8') as csv_file:
             csv_file.write('ISO-Code,count')
-            for key, count in flag_dict.items():
-                csv_file.write(f'\n{key},{count}')
+            csv_file.write(output)
+        return output
