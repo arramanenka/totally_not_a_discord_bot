@@ -165,7 +165,7 @@ class TotallyNotBot(discord.Client):
                 await message.channel.send("Another game is running, please try later")
         elif actual_message.startswith('game_stop'):
             if self.game_object is not None:
-                pass
+                self.game_object = None
         elif self.game_object is None:
             await message.channel.send("No game in progress, check back later")
         elif actual_message.startswith('game_reset'):

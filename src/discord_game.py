@@ -1,8 +1,8 @@
 import os
 import re
-from pathlib import Path
-from random import choice
 import shutil
+from pathlib import Path
+from random import choice, shuffle, sample
 
 from discord.utils import get
 
@@ -37,10 +37,11 @@ class PickAPersonGame:
             await start_message.channel.send(f'Could not start pick-a-person cuz there are no confessions :(')
             return False
         else:
+            shuffle(self.queue_of_confessions)
             if people_amount == 1:
                 self.people_per_confession_guess_amount = 1
-            elif people_amount > 5:
-                self.people_per_confession_guess_amount = 4
+            elif people_amount > 3:
+                self.people_per_confession_guess_amount = 3
             else:
                 self.people_per_confession_guess_amount = people_amount
             await start_message.channel.send(f'Hehe, starting up new pick-a-person game. '
@@ -81,8 +82,10 @@ class PickAPersonGame:
         possible_people = set()
         possible_people.add(self.current_confession[1])
         while len(possible_people) != self.people_per_confession_guess_amount:
-            possible_people.add(choice(self.participants))
-        await channel.send(f'Someone told me: {self.current_confession[0]}\nIt can be any of {possible_people}')
+            possible_people.add(sample(self.participants, 1)[0])
+        await channel.send(
+            f'Someone told me: {self.current_confession[0]}\n'
+            f'It can be any of {sample(self.participants, len(self.participants))}')
 
     @staticmethod
     async def process_direct(message):
