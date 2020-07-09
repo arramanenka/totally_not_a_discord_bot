@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 from random import choice
 
@@ -104,7 +105,7 @@ class PickAPersonGame:
         your_path = '/pick-a-person'
         for file in os.listdir(your_path):
             with open(os.path.join(your_path, file), 'r') as f:
-                person_id = f.name.replace('.txt', '')
+                person_id = re.sub(r'.pick-a-person.', '', f.name).strip().replace('.txt', '')
                 for x in f:
                     result.setdefault(person_id, []).append(x)
         return result
