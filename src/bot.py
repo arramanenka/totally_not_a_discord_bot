@@ -6,6 +6,7 @@ import discord
 import pycountry
 from discord.utils import get
 
+from src.discord_game import PickAPersonGame
 from src.util import find_flags, check_presence
 
 
@@ -19,6 +20,7 @@ class TotallyNotBot(discord.Client):
         self.rule_channel = None
         self.dm_rule_guild = None
         self.thank_you_words = ['thanks', 'thx', 'good boi', 'good boy', 'I love you', 'ily', 'love you']
+        self.game_object = None
 
     async def on_ready(self):
         print(f'{self.user} has connected to Discord!')
@@ -108,9 +110,12 @@ class TotallyNotBot(discord.Client):
         if message.content is not None and any(
                 p in message.content.lower() for p in ['pizza', 'plzza', 'p1zza', 'pizzã', 'pizz4', 'pizzá']):
             await message.add_reaction('🍍')
+        if message.guild is None and message.author.id != self.user.id:
+            await PickAPersonGame.process_direct(message)
         for mention in message.mentions:
             if mention.id == self.user.id:
                 await self.reply_to_direct(message)
+                return
 
     async def reply_to_direct(self, message):
         if message.author.bot:
@@ -137,8 +142,30 @@ class TotallyNotBot(discord.Client):
                 await message.channel.send(peepo_shy)
             else:
                 await message.channel.send('Trying my best ^_^')
+        elif actual_message.startswith('game_'):
+            await self.process_game_request(message, actual_message)
         else:
             await message.channel.send('Command not recognized, try help')
+
+    async def process_game_request(self, message, actual_message):
+        if get(message.author.roles, name='Maintenance Key') is None:
+            await message.channel.send(f'Sorry, {message.author.nick}, you ain\'t a mod')
+            return
+        if actual_message.startswith('game_start'):
+            if self.game_object is None:
+                if actual_message == 'game_start pick-a-person':
+                    self.game_object = PickAPersonGame()
+                else:
+                    await message.channel.send("Unrecognized game. Please try again")
+            else:
+                await message.channel.send("Another game is running, please try later")
+        elif actual_message.startswith('game_stop'):
+            if self.game_object is not None:
+                pass
+        elif self.game_object is not None:
+            await message.channel.send("No game in progress, check back later")
+        else:
+            await self.game_object.process_game_request(message, actual_message)
 
     @staticmethod
     async def send_dm(member, message=None, file=None):
