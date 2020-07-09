@@ -3,19 +3,15 @@ import re
 from pathlib import Path
 from random import choice
 
+from discord.utils import get
+
 
 class PickAPersonGame:
 
     def __init__(self) -> None:
         super().__init__()
         self.queue_of_confessions = []
-
-        confessions = PickAPersonGame.read_confessions()
-        for person, confessions in confessions.items():
-            for confession in confessions:
-                self.queue_of_confessions.append((confession, person))
-
-        self.participants = [key for key in confessions]
+        self.participants = set()
         self.current_confession = None
         self.joking_reveal_start = [
             'It was me, Dio!', 'It\'sa me, Mario.', 'No clue who it was.',
@@ -24,15 +20,24 @@ class PickAPersonGame:
         self.current_confession_index = -1
 
     async def start(self, start_message):
+        confessions = PickAPersonGame.read_confessions()
+        for person, confessions in confessions.items():
+            member = get(start_message.channel.members, id=int(person))
+            if member is None:
+                continue
+            person_name = member.nick
+            self.participants.add(person_name)
+            for confession in confessions:
+                self.queue_of_confessions.append((confession, person_name))
         length = len(self.queue_of_confessions)
         if length == 0:
             await start_message.channel.send(f'Could not start pick-a-person cuz there are no confessions :(')
             return False
         else:
             await start_message.channel.send(f'Hehe, starting up new pick-a-person game. '
-                                             f'{length} confessions were made. '
-                                             f'To reveal who was a person, that confessed, write \'game_reveal\'. '
-                                             f'To move to the next confession, write \'game_next\'. '
+                                             f'{length} confessions were made.\n'
+                                             f'To reveal who was a person, that confessed, write \'game_reveal\'.\n '
+                                             f'To move to the next confession, write \'game_next\'.\n'
                                              f'To move to the previous confession, write \'game_prev\'.\n'
                                              f'To get current confession question again, \'game_current\'')
             return True
