@@ -4,6 +4,7 @@ import re
 
 import discord
 import pycountry
+from discord.utils import get
 
 from src.util import find_flags, check_presence
 
@@ -17,6 +18,7 @@ class TotallyNotBot(discord.Client):
         self.rule_channel_name = os.getenv('RULE_CHANNEL_NAME') or 'rules'
         self.rule_channel = None
         self.dm_rule_guild = None
+        self.thank_you_words = ['thanks', 'thx', 'good boi', 'good boy', 'I love you', 'ily', 'love you']
 
     async def on_ready(self):
         print(f'{self.user} has connected to Discord!')
@@ -129,6 +131,12 @@ class TotallyNotBot(discord.Client):
                                message='To get map in dms, write \'map\'. '
                                        'To get map as .csv with iso codes, write \'map iso\''
                                        ' I generate csv for https://www.datawrapper.de/maps/')
+        elif any([x in actual_message.lower() for x in self.thank_you_words]):
+            peepo_shy = get(message.channel.guild.emojis, name='Peepo_Shy')
+            if peepo_shy:
+                await message.channel.send(peepo_shy)
+            else:
+                await message.channel.send('Trying my best ^_^')
         else:
             await message.channel.send('Command not recognized, try help')
 
