@@ -92,24 +92,24 @@ class PickAPersonGame:
         if message.content.startswith('Forgive me daddy, for I have sinned:'):
             confession = message.content.replace('Forgive me daddy, for I have sinned:', '').strip()
             print(f'{message.author} made a confession.')
-            directory = Path('/pick-a-person')
+            directory = Path('pick-a-person')
             if not directory.is_dir():
                 directory.mkdir()
-            with open(f'/pick-a-person/{message.author.id}.txt', mode='a+', encoding='utf-8') as file:
+            with open(f'pick-a-person/{message.author.id}.txt', mode='a+', encoding='utf-8') as file:
                 file.write(f'\"{confession}\"\n')
             await message.channel.send("I forgive you.")
         elif message.content.startswith('what have I done?'):
-            if not Path(f'/pick-a-person/{message.author.id}.txt').is_file():
+            if not Path(f'pick-a-person/{message.author.id}.txt').is_file():
                 await message.channel.send('Your soul is clear of sins.')
                 return
-            with open(f'/pick-a-person/{message.author.id}.txt', mode='r+', encoding='utf-8') as file:
+            with open(f'pick-a-person/{message.author.id}.txt', mode='r+', encoding='utf-8') as file:
                 lines = file.readlines()
             if lines:
                 await message.channel.send(''.join(lines))
             else:
                 await message.channel.send('Your soul is clear of sins.')
         elif message.content.startswith('only God can judge me, not you'):
-            Path(f'/pick-a-person/{message.author.id}.txt').unlink()
+            Path(f'pick-a-person/{message.author.id}.txt').unlink()
             await message.channel.send('That is true. I release your sins')
         elif message.content.startswith('help'):
             await message.channel.send('If you want to play pick-a-person, you can either '
@@ -122,15 +122,16 @@ class PickAPersonGame:
     @staticmethod
     def read_confessions():
         result = dict()
-        your_path = '/pick-a-person'
+        your_path = 'pick-a-person'
         for file in os.listdir(your_path):
             with open(os.path.join(your_path, file), 'r') as f:
-                person_id = re.sub(r'.pick-a-person.', '', f.name).strip().replace('.txt', '')
+                print(f.name)
+                person_id = re.sub(r'.*pick-a-person.', '', f.name).strip().replace('.txt', '')
                 for x in f:
                     result.setdefault(person_id, []).append(x)
         return result
 
     @staticmethod
     def delete_all_confessions():
-        shutil.rmtree('/pick-a-person')
+        shutil.rmtree('pick-a-person')
         pass
