@@ -168,6 +168,8 @@ class TotallyNotBot(discord.Client):
                 pass
         elif self.game_object is None:
             await message.channel.send("No game in progress, check back later")
+        elif actual_message.startswith('game_reset'):
+            self.game_object.delete_all_confessions()
         else:
             await self.game_object.process_game_request(message, actual_message)
 

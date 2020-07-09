@@ -2,6 +2,7 @@ import os
 import re
 from pathlib import Path
 from random import choice
+import shutil
 
 from discord.utils import get
 
@@ -18,6 +19,7 @@ class PickAPersonGame:
             'Well, of course I know who it was. It was me.', 'Idk.', 'It was Sam.'
         ]
         self.current_confession_index = -1
+        self.people_per_confession_guess_amount = 0
 
     async def start(self, start_message):
         confessions = PickAPersonGame.read_confessions()
@@ -29,13 +31,20 @@ class PickAPersonGame:
             self.participants.add(person_name)
             for confession in confessions:
                 self.queue_of_confessions.append((confession, person_name))
-        length = len(self.queue_of_confessions)
-        if length == 0:
+        confession_amount = len(self.queue_of_confessions)
+        people_amount = len(self.participants)
+        if confession_amount == 0:
             await start_message.channel.send(f'Could not start pick-a-person cuz there are no confessions :(')
             return False
         else:
+            if people_amount == 1:
+                self.people_per_confession_guess_amount = 1
+            elif people_amount > 5:
+                self.people_per_confession_guess_amount = 4
+            else:
+                self.people_per_confession_guess_amount = people_amount
             await start_message.channel.send(f'Hehe, starting up new pick-a-person game. '
-                                             f'{length} confessions were made.\n'
+                                             f'{confession_amount} confessions were made.\n'
                                              f'To reveal who was a person, that confessed, write \'game_reveal\'.\n '
                                              f'To move to the next confession, write \'game_next\'.\n'
                                              f'To move to the previous confession, write \'game_prev\'.\n'
@@ -69,12 +78,16 @@ class PickAPersonGame:
             await message.channel.send('I guess that is it! queue is empty.')
 
     async def print_confession(self, channel):
-        await channel.send(f'Someone told me: {self.current_confession[0]}')
+        possible_people = set()
+        possible_people.add(self.current_confession[1])
+        while len(possible_people) != self.people_per_confession_guess_amount:
+            possible_people.add(choice(self.participants))
+        await channel.send(f'Someone told me: {self.current_confession[0]}\nIt can be any of {possible_people}')
 
     @staticmethod
     async def process_direct(message):
-        if message.content.startswith('Forgive me father, for I have sinned:'):
-            confession = message.content.replace('Forgive me father, for I have sinned:', '').strip()
+        if message.content.startswith('Forgive me daddy, for I have sinned:'):
+            confession = message.content.replace('Forgive me daddy, for I have sinned:', '').strip()
             print(f'{message.author} made a confession: {confession}')
             directory = Path('/pick-a-person')
             if not directory.is_dir():
@@ -98,7 +111,7 @@ class PickAPersonGame:
             await message.channel.send('That is true. I release your sins')
         elif message.content.startswith('help'):
             await message.channel.send('If you want to play pick-a-person, you can either '
-                                       'make a confession, by \'Forgive me father, for I have sinned: [your message]\''
+                                       'make a confession, by \'Forgive me daddy, for I have sinned: [your message]\''
                                        '\nOr get your current confessions with \'what have I done?\'\n'
                                        'You can also make me forget your sins with \'only God can judge me, not you\'.'
                                        '\nHowever, you should note, that I might not forget it,'
@@ -114,3 +127,8 @@ class PickAPersonGame:
                 for x in f:
                     result.setdefault(person_id, []).append(x)
         return result
+
+    @staticmethod
+    def delete_all_confessions():
+        shutil.rmtree('/pick-a-person')
+        pass
