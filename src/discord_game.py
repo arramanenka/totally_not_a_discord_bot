@@ -91,7 +91,7 @@ class PickAPersonGame:
     async def process_direct(message):
         if message.content.startswith('Forgive me daddy, for I have sinned:'):
             confession = message.content.replace('Forgive me daddy, for I have sinned:', '').strip()
-            print(f'{message.author} made a confession: {confession}')
+            print(f'{message.author} made a confession.')
             directory = Path('/pick-a-person')
             if not directory.is_dir():
                 directory.mkdir()
@@ -108,7 +108,6 @@ class PickAPersonGame:
                 await message.channel.send(''.join(lines))
             else:
                 await message.channel.send('Your soul is clear of sins.')
-            pass
         elif message.content.startswith('only God can judge me, not you'):
             Path(f'/pick-a-person/{message.author.id}.txt').unlink()
             await message.channel.send('That is true. I release your sins')
