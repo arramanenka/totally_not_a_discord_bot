@@ -114,19 +114,20 @@ class TotallyNotBot(discord.Client):
         if message.author.bot:
             return
         actual_message = re.sub(r'<.*>', '', message.content).strip()
-        if actual_message == 'update map':
+        if actual_message == 'map':
             guild = message.channel.guild
             member_map = TotallyNotBot.save_guild_member_map(guild, False)
             await self.send_dm(message.author, member_map)
             await message.channel.send('I am a good boy, I updated your map! Check your dms')
-        elif actual_message == 'update map iso':
+        elif actual_message == 'map iso':
             guild = message.channel.guild
             TotallyNotBot.save_guild_member_map(guild)
             await self.send_dm(message.author, file=f'{guild.id}.csv')
             await message.channel.send('I am a good boy, I updated your map! Check your dms')
         elif actual_message == 'help':
             await self.send_dm(message.author,
-                               message='To update map, write \'update map\'.'
+                               message='To get map in dms, write \'map\'. '
+                                       'To get map as .csv with iso codes, write \'map iso\''
                                        ' I generate csv for https://www.datawrapper.de/maps/')
         else:
             await message.channel.send('Command not recognized, try help')
