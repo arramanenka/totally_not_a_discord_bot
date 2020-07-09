@@ -166,7 +166,7 @@ class TotallyNotBot(discord.Client):
         elif actual_message.startswith('game_stop'):
             if self.game_object is not None:
                 pass
-        elif self.game_object is not None:
+        elif self.game_object is None:
             await message.channel.send("No game in progress, check back later")
         else:
             await self.game_object.process_game_request(message, actual_message)

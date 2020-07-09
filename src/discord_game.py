@@ -1,13 +1,20 @@
+import os
 from pathlib import Path
-from random import shuffle, choice
+from random import choice
 
 
 class PickAPersonGame:
 
     def __init__(self) -> None:
         super().__init__()
-        confessions = dict()
-        self.queue_of_confessions = shuffle([(key, value) for key, value in confessions]) or []
+        self.queue_of_confessions = []
+
+        confessions = PickAPersonGame.read_confessions()
+        for person, confessions in confessions.items():
+            for confession in confessions:
+                self.queue_of_confessions.append((confession, person))
+
+        self.participants = [key for key in confessions]
         self.current_confession = None
         self.joking_reveal_start = [
             'It was me, Dio!', 'It\'sa me, Mario.', 'No clue who it was.',
@@ -25,16 +32,19 @@ class PickAPersonGame:
                                              f'{length} confessions were made. '
                                              f'To reveal who was a person, that confessed, write \'game_reveal\'. '
                                              f'To move to the next confession, write \'game_next\'. '
-                                             f'To move to the previous confession, write \'game_prev\'.')
+                                             f'To move to the previous confession, write \'game_prev\'.\n'
+                                             f'To get current confession question again, \'game_current\'')
             return True
 
     async def process_game_request(self, message, actual_message):
         if actual_message.startswith('game_reveal'):
-            await message.channel.send(f'{choice(self.joking_reveal_start)} Jk, it was {self.current_confession[0]}')
+            await message.channel.send(f'{choice(self.joking_reveal_start)} Jk, it was {self.current_confession[1]}')
         elif actual_message.startswith('game_next'):
             await self.next_confession(message)
         elif actual_message.startswith('game_prev'):
             await self.prev_confession(message)
+        elif actual_message.startswith('game_current'):
+            await self.print_confession(message.channel)
 
     async def prev_confession(self, message):
         if self.current_confession_index > 0:
@@ -45,7 +55,7 @@ class PickAPersonGame:
             await message.channel.send('Can\'t go before zero :(')
 
     async def next_confession(self, message):
-        if len(self.queue_of_confessions) > self.current_confession_index:
+        if len(self.queue_of_confessions) - 1 > self.current_confession_index:
             self.current_confession_index += 1
             self.current_confession = self.queue_of_confessions[self.current_confession_index]
             await self.print_confession(message.channel)
@@ -64,7 +74,7 @@ class PickAPersonGame:
             if not directory.is_dir():
                 directory.mkdir()
             with open(f'/pick-a-person/{message.author.id}.txt', mode='a+', encoding='utf-8') as file:
-                file.write(f'\n\"{confession}\"')
+                file.write(f'\"{confession}\"\n')
             await message.channel.send("I forgive you.")
         elif message.content.startswith('what have I done?'):
             if not Path(f'/pick-a-person/{message.author.id}.txt').is_file():
@@ -87,4 +97,14 @@ class PickAPersonGame:
                                        'You can also make me forget your sins with \'only God can judge me, not you\'.'
                                        '\nHowever, you should note, that I might not forget it,'
                                        ' if pick-a-person is running')
-            pass
+
+    @staticmethod
+    def read_confessions():
+        result = dict()
+        your_path = '/pick-a-person'
+        for file in os.listdir(your_path):
+            with open(os.path.join(your_path, file), 'r') as f:
+                person_id = f.name.replace('.txt', '')
+                for x in f:
+                    result.setdefault(person_id, []).append(x)
+        return result
