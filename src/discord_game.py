@@ -20,37 +20,39 @@ class PickAPersonGame:
         ]
         self.current_confession_index = -1
         self.people_per_confession_guess_amount = 0
+        self.start_channel = None
 
     async def start(self, start_message):
+        self.start_channel = start_message.channel
         confessions = PickAPersonGame.read_confessions()
         for person, confessions in confessions.items():
-            member = get(start_message.channel.members, id=int(person))
-            if member is None:
-                continue
-            person_name = member.nick
-            self.participants.add(person_name)
-            for confession in confessions:
-                self.queue_of_confessions.append((confession, person_name))
+            await self.on_new_confessions(person, confessions)
         confession_amount = len(self.queue_of_confessions)
+        shuffle(self.queue_of_confessions)
+        await start_message.channel.send(f'Hehe, starting up new pick-a-person game. '
+                                         f'{confession_amount} confessions were made.\n'
+                                         f'To reveal who was a person, that confessed, write \'game_reveal\'.\n '
+                                         f'To move to the next confession, write \'game_next\'.\n'
+                                         f'To move to the previous confession, write \'game_prev\'.\n'
+                                         f'To get current confession question again, \'game_current\'')
+
+    async def on_new_confessions(self, person, confessions, notify=False):
+        member = get(self.start_channel.members, id=int(person))
+        if member is None:
+            return
+        person_name = member.nick
+        self.participants.add(person_name)
+        for confession in confessions:
+            self.queue_of_confessions.append((confession, person_name))
         people_amount = len(self.participants)
-        if confession_amount == 0:
-            await start_message.channel.send(f'Could not start pick-a-person cuz there are no confessions :(')
-            return False
+        if people_amount == 1:
+            self.people_per_confession_guess_amount = 1
+        elif people_amount > 3:
+            self.people_per_confession_guess_amount = 3
         else:
-            shuffle(self.queue_of_confessions)
-            if people_amount == 1:
-                self.people_per_confession_guess_amount = 1
-            elif people_amount > 3:
-                self.people_per_confession_guess_amount = 3
-            else:
-                self.people_per_confession_guess_amount = people_amount
-            await start_message.channel.send(f'Hehe, starting up new pick-a-person game. '
-                                             f'{confession_amount} confessions were made.\n'
-                                             f'To reveal who was a person, that confessed, write \'game_reveal\'.\n '
-                                             f'To move to the next confession, write \'game_next\'.\n'
-                                             f'To move to the previous confession, write \'game_prev\'.\n'
-                                             f'To get current confession question again, \'game_current\'')
-            return True
+            self.people_per_confession_guess_amount = people_amount
+        if notify:
+            await self.start_channel.send('Someone new made a confession')
 
     async def process_game_request(self, message, actual_message):
         if actual_message.startswith('game_reveal'):
@@ -88,7 +90,7 @@ class PickAPersonGame:
             f'It can be any of {sample(self.participants, len(self.participants))}')
 
     @staticmethod
-    async def process_direct(message):
+    async def process_direct(message, game_object=None):
         if message.content.startswith('Forgive me daddy, for I have sinned:'):
             confession = message.content.replace('Forgive me daddy, for I have sinned:', '').strip()
             print(f'{message.author} made a confession.')
@@ -97,6 +99,8 @@ class PickAPersonGame:
                 directory.mkdir()
             with open(f'pick-a-person/{message.author.id}.txt', mode='a+', encoding='utf-8') as file:
                 file.write(f'\"{confession}\"\n')
+            if game_object is not None:
+                await game_object.on_new_confessions(message.author.id, [confession], True)
             await message.channel.send("I forgive you.")
         elif message.content.startswith('what have I done?'):
             if not Path(f'pick-a-person/{message.author.id}.txt').is_file():
@@ -123,6 +127,8 @@ class PickAPersonGame:
     def read_confessions():
         result = dict()
         your_path = 'pick-a-person'
+        if not Path('pick-a-person').is_dir():
+            return result
         for file in os.listdir(your_path):
             with open(os.path.join(your_path, file), 'r') as f:
                 person_id = re.sub(r'.*pick-a-person.', '', f.name).strip().replace('.txt', '')
