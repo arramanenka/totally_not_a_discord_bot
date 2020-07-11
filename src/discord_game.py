@@ -127,6 +127,9 @@ class PickAPersonGame:
     def read_confessions():
         result = dict()
         your_path = 'pick-a-person'
+        directory = Path('pick-a-person')
+        if not directory.is_dir():
+            return
         for file in os.listdir(your_path):
             with open(os.path.join(your_path, file), 'r') as f:
                 person_id = re.sub(r'.*pick-a-person.', '', f.name).strip().replace('.txt', '')
