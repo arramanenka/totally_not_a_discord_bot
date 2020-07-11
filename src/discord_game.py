@@ -127,8 +127,7 @@ class PickAPersonGame:
     def read_confessions():
         result = dict()
         your_path = 'pick-a-person'
-        directory = Path('pick-a-person')
-        if not directory.is_dir():
+        if not Path('pick-a-person').is_dir():
             return result
         for file in os.listdir(your_path):
             with open(os.path.join(your_path, file), 'r') as f:
