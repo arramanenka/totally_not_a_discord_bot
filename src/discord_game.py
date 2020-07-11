@@ -29,24 +29,19 @@ class PickAPersonGame:
             await self.on_new_confessions(person, confessions)
         confession_amount = len(self.queue_of_confessions)
         people_amount = len(self.participants)
-        if confession_amount == 0:
-            await start_message.channel.send(f'Could not start pick-a-person cuz there are no confessions :(')
-            return False
+        shuffle(self.queue_of_confessions)
+        if people_amount == 1:
+            self.people_per_confession_guess_amount = 1
+        elif people_amount > 3:
+            self.people_per_confession_guess_amount = 3
         else:
-            shuffle(self.queue_of_confessions)
-            if people_amount == 1:
-                self.people_per_confession_guess_amount = 1
-            elif people_amount > 3:
-                self.people_per_confession_guess_amount = 3
-            else:
-                self.people_per_confession_guess_amount = people_amount
-            await start_message.channel.send(f'Hehe, starting up new pick-a-person game. '
-                                             f'{confession_amount} confessions were made.\n'
-                                             f'To reveal who was a person, that confessed, write \'game_reveal\'.\n '
-                                             f'To move to the next confession, write \'game_next\'.\n'
-                                             f'To move to the previous confession, write \'game_prev\'.\n'
-                                             f'To get current confession question again, \'game_current\'')
-            return True
+            self.people_per_confession_guess_amount = people_amount
+        await start_message.channel.send(f'Hehe, starting up new pick-a-person game. '
+                                         f'{confession_amount} confessions were made.\n'
+                                         f'To reveal who was a person, that confessed, write \'game_reveal\'.\n '
+                                         f'To move to the next confession, write \'game_next\'.\n'
+                                         f'To move to the previous confession, write \'game_prev\'.\n'
+                                         f'To get current confession question again, \'game_current\'')
 
     async def on_new_confessions(self, person, confessions):
         member = get(self.start_channel.members, id=int(person))

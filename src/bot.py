@@ -156,9 +156,7 @@ class TotallyNotBot(discord.Client):
             if self.game_object is None:
                 if actual_message == 'game_start pick-a-person':
                     self.game_object = PickAPersonGame()
-                    started = await self.game_object.start(message)
-                    if not started:
-                        self.game_object = None
+                    await self.game_object.start(message)
                 else:
                     await message.channel.send("Unrecognized game. Please try again")
             else:
