@@ -111,7 +111,7 @@ class TotallyNotBot(discord.Client):
                 p in message.content.lower() for p in ['pizza', 'plzza', 'p1zza', 'pizzã', 'pizz4', 'pizzá']):
             await message.add_reaction('🍍')
         if message.guild is None and message.author.id != self.user.id:
-            await PickAPersonGame.process_direct(message)
+            await PickAPersonGame.process_direct(message, self.game_object)
         for mention in message.mentions:
             if mention.id == self.user.id:
                 await self.reply_to_direct(message)
