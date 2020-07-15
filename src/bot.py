@@ -112,6 +112,7 @@ class TotallyNotBot(discord.Client):
             await message.add_reaction('🍍')
         if 'are you pro China' in message.content:
             await message.channel.send('不我不是')
+            return
         # if message.guild is None and message.author.id != self.user.id:
         #     await PickAPersonGame.process_direct(message, self.game_object)
         for mention in message.mentions:
