@@ -110,8 +110,10 @@ class TotallyNotBot(discord.Client):
         if message.content is not None and any(
                 p in message.content.lower() for p in ['pizza', 'plzza', 'p1zza', 'pizzã', 'pizz4', 'pizzá']):
             await message.add_reaction('🍍')
-        if message.guild is None and message.author.id != self.user.id:
-            await PickAPersonGame.process_direct(message, self.game_object)
+        if 'are you pro China' in message.content:
+            await message.channel.send('不我不是')
+        # if message.guild is None and message.author.id != self.user.id:
+        #     await PickAPersonGame.process_direct(message, self.game_object)
         for mention in message.mentions:
             if mention.id == self.user.id:
                 await self.reply_to_direct(message)
@@ -142,8 +144,8 @@ class TotallyNotBot(discord.Client):
                 await message.channel.send(peepo_shy)
             else:
                 await message.channel.send('Trying my best ^_^')
-        elif actual_message.startswith('game_'):
-            await self.process_game_request(message, actual_message)
+        # elif actual_message.startswith('game_'):
+        #     await self.process_game_request(message, actual_message)
         else:
             await message.channel.send('Command not recognized, try help')
 
