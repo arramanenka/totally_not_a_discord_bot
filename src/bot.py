@@ -1,13 +1,13 @@
 import asyncio
 import os
 import re
+from io import StringIO
 
 import discord
-import pycountry
-from discord.utils import get
-from datawrapper import Datawrapper
-from io import StringIO
 import pandas as pd
+import pycountry
+from datawrapper import Datawrapper
+from discord.utils import get
 
 from src.discord_game import PickAPersonGame
 from src.util import find_flags, check_presence
@@ -24,7 +24,7 @@ class TotallyNotBot(discord.Client):
         self.dm_rule_guild = None
         self.thank_you_words = ['thanks', 'thx', 'good boi', 'good boy', 'I love you', 'ily', 'love you']
         self.game_object = None
-        self.data_wrapper = Datawrapper(access_token = os.getenv('DATAWRAPPER_TOKEN'))
+        self.data_wrapper = Datawrapper(access_token=os.getenv('DATAWRAPPER_TOKEN'))
 
     async def on_ready(self):
         print(f'{self.user} has connected to Discord!')
@@ -136,13 +136,13 @@ class TotallyNotBot(discord.Client):
         elif actual_message == 'map iso':
             guild = message.channel.guild
             guild_member_map = TotallyNotBot.save_guild_member_map(guild)
-            await self.send_dm(message.author, file=f'{guild.id}.csv')
+            await self.send_dm(message.author, file=discord.File(f'{guild.id}.csv'))
             self.update_datawrapper_map(guild_member_map)
             await message.channel.send('I am a good boy, I updated your map! Check your dms')
         elif actual_message == 'map png':
             guild_member_map = TotallyNotBot.save_guild_member_map(message.channel.guild)
             self.update_datawrapper_map(guild_member_map)
-            await message.channel.send(file='AFjgi.png')
+            await message.channel.send(file=discord.File('AFjgi.png'))
         elif actual_message == 'help':
             await self.send_dm(message.author,
                                message='To get map in dms, write \'map\'. '
