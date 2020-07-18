@@ -139,6 +139,10 @@ class TotallyNotBot(discord.Client):
             await self.send_dm(message.author, file=f'{guild.id}.csv')
             self.update_datawrapper_map(guild_member_map)
             await message.channel.send('I am a good boy, I updated your map! Check your dms')
+        elif actual_message == 'map png':
+            guild_member_map = TotallyNotBot.save_guild_member_map(message.channel.guild)
+            self.update_datawrapper_map(guild_member_map)
+            await message.channel.send(file='AFjgi.png')
         elif actual_message == 'help':
             await self.send_dm(message.author,
                                message='To get map in dms, write \'map\'. '
@@ -224,3 +228,4 @@ class TotallyNotBot(discord.Client):
     def update_datawrapper_map(self, guild_member_map):
         self.data_wrapper.add_data('AFjgi', data=pd.read_csv(StringIO(f'ISO-Code,count\n{guild_member_map}')))
         self.data_wrapper.publish_chart('AFjgi')
+        self.data_wrapper.export_chart('AFjgi', width=1920, filepath='AFjgi.png')
