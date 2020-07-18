@@ -5,6 +5,9 @@ import re
 import discord
 import pycountry
 from discord.utils import get
+from datawrapper import Datawrapper
+from io import StringIO
+import pandas as pd
 
 from src.discord_game import PickAPersonGame
 from src.util import find_flags, check_presence
@@ -21,6 +24,7 @@ class TotallyNotBot(discord.Client):
         self.dm_rule_guild = None
         self.thank_you_words = ['thanks', 'thx', 'good boi', 'good boy', 'I love you', 'ily', 'love you']
         self.game_object = None
+        self.data_wrapper = Datawrapper(access_token = os.getenv('DATAWRAPPER_TOKEN'))
 
     async def on_ready(self):
         print(f'{self.user} has connected to Discord!')
@@ -131,8 +135,9 @@ class TotallyNotBot(discord.Client):
             await message.channel.send('I am a good boy, I updated your map! Check your dms')
         elif actual_message == 'map iso':
             guild = message.channel.guild
-            TotallyNotBot.save_guild_member_map(guild)
+            guild_member_map = TotallyNotBot.save_guild_member_map(guild)
             await self.send_dm(message.author, file=f'{guild.id}.csv')
+            self.update_datawrapper_map(guild_member_map)
             await message.channel.send('I am a good boy, I updated your map! Check your dms')
         elif actual_message == 'help':
             await self.send_dm(message.author,
@@ -215,3 +220,7 @@ class TotallyNotBot(discord.Client):
             csv_file.write('ISO-Code,count')
             csv_file.write(output)
         return output
+
+    def update_datawrapper_map(self, guild_member_map):
+        self.data_wrapper.add_data('AFjgi', data=pd.read_csv(StringIO(f'ISO-Code,count\n{guild_member_map}')))
+        self.data_wrapper.publish_chart('AFjgi')

@@ -10,3 +10,6 @@ multidict==4.7.6
 pycountry==19.8.18
 websockets==8.1
 yarl==1.4.2
+
+datawrapper~=0.4.3
+pandas~=1.0.5
