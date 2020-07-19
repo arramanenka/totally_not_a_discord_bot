@@ -136,7 +136,7 @@ class TotallyNotBot(discord.Client):
         elif actual_message == 'map iso':
             guild = message.channel.guild
             guild_member_map = TotallyNotBot.save_guild_member_map(guild)
-            await self.send_dm(message.author, file=discord.File(f'{guild.id}.csv'))
+            await self.send_dm(message.author, file=f'{guild.id}.csv')
             self.update_datawrapper_map(guild_member_map)
             await message.channel.send('I am a good boy, I updated your map! Check your dms')
         elif actual_message == 'map png':
