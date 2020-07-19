@@ -228,4 +228,4 @@ class TotallyNotBot(discord.Client):
     def update_datawrapper_map(self, guild_member_map):
         self.data_wrapper.add_data('AFjgi', data=pd.read_csv(StringIO(f'ISO-Code,count\n{guild_member_map}')))
         self.data_wrapper.publish_chart('AFjgi')
-        self.data_wrapper.export_chart('AFjgi', width=1920, filepath='AFjgi.png')
+        self.data_wrapper.export_chart('AFjgi', filepath='AFjgi.png')
