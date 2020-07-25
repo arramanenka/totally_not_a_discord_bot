@@ -1,6 +1,7 @@
 import asyncio
 import os
 import re
+import sys
 from io import StringIO
 
 import discord
@@ -33,7 +34,14 @@ class TotallyNotBot(discord.Client):
         if guild and self.open_dm_rule_message_id is not None:
             self.rule_channel = discord.utils.find(lambda c: c.name == self.rule_channel_name, guild.channels)
             self.loop.create_task(self.update_rule_roles())
+            self.loop.create_task(self.commit_suicide())
             self.save_guild_member_map(guild)
+
+    @staticmethod
+    async def commit_suicide():
+        await asyncio.sleep(60 * 60 * 12)
+        print('commiting suicide to be reborn')
+        sys.exit(0)
 
     async def update_rule_roles(self):
         while True:
