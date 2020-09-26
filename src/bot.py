@@ -1,7 +1,5 @@
-import asyncio
 import os
 import re
-import sys
 from io import StringIO
 
 import discord
@@ -10,8 +8,7 @@ import pycountry
 from datawrapper import Datawrapper
 from discord.utils import get
 
-from src.discord_game import PickAPersonGame
-from src.util import find_flags, check_presence
+from src.util import find_flags
 
 
 class TotallyNotBot(discord.Client):
@@ -33,83 +30,7 @@ class TotallyNotBot(discord.Client):
         self.dm_rule_guild = guild
         if guild and self.open_dm_rule_message_id is not None:
             self.rule_channel = discord.utils.find(lambda c: c.name == self.rule_channel_name, guild.channels)
-            self.loop.create_task(self.update_rule_roles())
             self.save_guild_member_map(guild)
-
-    async def update_rule_roles(self):
-        while True:
-            print('checking roles')
-            if self.rule_channel is not None and self.open_dm_rule_message_id is not None:
-                msg = await self.rule_channel.fetch_message(self.open_dm_rule_message_id)
-                rules = dict()
-                for r in msg.reactions:
-                    users = await r.users().flatten()
-                    if r.emoji == '🌕':
-                        rules['open'] = users
-                    elif r.emoji == '🌗':
-                        rules['ask_first'] = users
-                    elif r.emoji == '🌑':
-                        rules['closed'] = users
-                rules.setdefault('open', [])
-                rules.setdefault('ask_first', [])
-                rules.setdefault('closed', [])
-                for member in rules['closed']:
-                    if check_presence(member, 'open', rules):
-                        rules['open'].remove(member)
-                    if check_presence(member, 'ask_first', rules):
-                        rules['ask_first'].remove(member)
-                for member in rules['ask_first']:
-                    if check_presence(member, 'open', rules):
-                        rules['open'].remove(member)
-                closed_dms_role_name = 'Closed DMs'
-                ask_first_dms_role_name = 'Ask First DMs'
-                open_dms_role_name = 'Open DMs'
-                all_roles = {open_dms_role_name, ask_first_dms_role_name, closed_dms_role_name}
-                await self.assign_role_if_not_present(rules['open'], open_dms_role_name, all_roles)
-                await self.assign_role_if_not_present(rules['ask_first'], ask_first_dms_role_name, all_roles)
-                await self.assign_role_if_not_present(rules['closed'], closed_dms_role_name, all_roles)
-            await asyncio.sleep(3600)
-        pass
-
-    async def assign_role_if_not_present(self, members, role_name, conflicting_roles=None):
-        for member in members:
-            if type(member) is discord.User:
-                # it is a member, who left server, so we cannot assign or remove any roles
-                continue
-            if conflicting_roles is not None:
-                for conflicting_role in conflicting_roles:
-                    if conflicting_role == role_name:
-                        continue
-                    found_role = discord.utils.find(lambda role: role.name == conflicting_role, member.roles)
-                    if found_role is not None:
-                        await self.remove_role_from_member(member, conflicting_role)
-            found_role = discord.utils.find(lambda role: role.name == role_name, member.roles)
-            if found_role is None:
-                await self.assign_role_to_member(member, role_name)
-                pass
-        pass
-
-    async def manage_roles_for_user(self, member, role, action):
-        actual_role = discord.utils.get(self.dm_rule_guild.roles, name=role)
-        if actual_role is not None:
-            await action(actual_role)
-        else:
-            print(f'Could not find role {role} on server, so cannot assign it to {member}')
-        pass
-
-    async def assign_role_to_member(self, member, role):
-        async def assign_role(actual_role):
-            await member.add_roles(actual_role)
-            print(f'assigned {role} to  {member}')
-
-        await self.manage_roles_for_user(member, role, assign_role)
-
-    async def remove_role_from_member(self, member, role):
-        async def remove_role(actual_role):
-            await member.remove_roles(actual_role)
-            print(f'removed role {role} from {member}')
-
-        await self.manage_roles_for_user(member, role, remove_role)
 
     async def on_message(self, message):
         if message.content is not None and any(
@@ -118,10 +39,8 @@ class TotallyNotBot(discord.Client):
         if 'are you pro China' in message.content:
             await message.channel.send('不我不是')
             return
-        # if message.guild is None and message.author.id != self.user.id:
-        #     await PickAPersonGame.process_direct(message, self.game_object)
         for mention in message.mentions:
-            if mention.id == self.user.id:
+            if mention.id == self.user.id and len(message.mentions) == 1:
                 await self.reply_to_direct(message)
                 return
 
@@ -129,6 +48,8 @@ class TotallyNotBot(discord.Client):
         if message.author.bot:
             return
         actual_message = re.sub(r'<.*>', '', message.content).strip()
+        if actual_message.startswith('!'):
+            return
         if actual_message == 'map':
             guild = message.channel.guild
             member_map = TotallyNotBot.save_guild_member_map(guild, False)
@@ -155,34 +76,9 @@ class TotallyNotBot(discord.Client):
                 await message.channel.send(peepo_shy)
             else:
                 await message.channel.send('Trying my best ^_^')
-        # elif actual_message.startswith('game_'):
-        #     await self.process_game_request(message, actual_message)
         else:
-            await message.channel.send('Command not recognized, try help')
-
-    async def process_game_request(self, message, actual_message):
-        if get(message.author.roles, name='Maintenance Key') is None \
-                and get(message.author.roles, name='Moderator') is None:
-            await message.channel.send(f'Sorry, {message.author.nick}, you ain\'t a mod, or a beautiful maintainer')
-            return
-        if actual_message.startswith('game_start'):
-            if self.game_object is None:
-                if actual_message == 'game_start pick-a-person':
-                    self.game_object = PickAPersonGame()
-                    await self.game_object.start(message)
-                else:
-                    await message.channel.send("Unrecognized game. Please try again")
-            else:
-                await message.channel.send("Another game is running, please try later")
-        elif actual_message.startswith('game_stop'):
-            if self.game_object is not None:
-                self.game_object = None
-        elif self.game_object is None:
-            await message.channel.send("No game in progress, check back later")
-        elif actual_message.startswith('game_reset'):
-            self.game_object.delete_all_confessions()
-        else:
-            await self.game_object.process_game_request(message, actual_message)
+            await message.channel.send('I am so sorry, I did not get what you are saying to me. You can ask me '
+                                       'for help any time though')
 
     @staticmethod
     async def send_dm(member, message=None, file=None):
