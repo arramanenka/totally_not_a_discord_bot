@@ -91,7 +91,6 @@ class TotallyNotBot(discord.Client):
         flag_dict = dict()
         await guild.chunk()
         for m in guild.members:
-            print(m)
             if not m.bot:
                 flags = find_flags(m.nick)
                 added_flags = []
