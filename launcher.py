@@ -1,12 +1,13 @@
 import os
 
-from src.bot import TotallyNotBot
-from src.keep_alive import keep_alive
+import discord
 
-keep_alive()
+from src.bot import TotallyNotBot
 
 TOKEN = os.getenv('DISCORD_TOKEN')
+intents = discord.Intents.default()
+intents.members = True
 
-client = TotallyNotBot()
+client = TotallyNotBot(intents=intents)
 
 client.run(TOKEN)

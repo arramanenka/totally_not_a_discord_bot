@@ -30,7 +30,7 @@ class TotallyNotBot(discord.Client):
         self.dm_rule_guild = guild
         if guild and self.open_dm_rule_message_id is not None:
             self.rule_channel = discord.utils.find(lambda c: c.name == self.rule_channel_name, guild.channels)
-            self.save_guild_member_map(guild)
+            await self.save_guild_member_map(guild)
 
     async def on_message(self, message):
         if message.content is not None and any(
@@ -52,17 +52,15 @@ class TotallyNotBot(discord.Client):
             return
         if actual_message == 'map':
             guild = message.channel.guild
-            member_map = TotallyNotBot.save_guild_member_map(guild, False)
+            member_map = await TotallyNotBot.save_guild_member_map(guild, False)
             await self.send_dm(message.author, member_map)
             await message.channel.send('I am a good boy, I updated your map! Check your dms')
         elif actual_message == 'map iso':
             guild = message.channel.guild
-            guild_member_map = TotallyNotBot.save_guild_member_map(guild)
-            await self.send_dm(message.author, file=f'{guild.id}.csv')
-            self.update_datawrapper_map(guild_member_map)
-            await message.channel.send('I am a good boy, I updated your map! Check your dms')
+            await TotallyNotBot.save_guild_member_map(guild)
+            await self.send_dm(message.author, message='here is your map :heart:', file=f'{guild.id}.csv')
         elif actual_message == 'map png':
-            guild_member_map = TotallyNotBot.save_guild_member_map(message.channel.guild)
+            guild_member_map = await TotallyNotBot.save_guild_member_map(message.channel.guild)
             self.update_datawrapper_map(guild_member_map)
             await message.channel.send(file=discord.File('AFjgi.png'))
         elif actual_message == 'help':
@@ -89,9 +87,11 @@ class TotallyNotBot(discord.Client):
             await member.dm_channel.send(message)
 
     @staticmethod
-    def save_guild_member_map(guild, use_iso=True):
+    async def save_guild_member_map(guild, use_iso=True):
         flag_dict = dict()
+        await guild.chunk()
         for m in guild.members:
+            print(m)
             if not m.bot:
                 flags = find_flags(m.nick)
                 added_flags = []
