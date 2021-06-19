@@ -20,7 +20,9 @@ class TotallyNotBot(discord.Client):
         self.rule_channel_name = os.getenv('RULE_CHANNEL_NAME') or 'rules'
         self.rule_channel = None
         self.dm_rule_guild = None
-        self.thank_you_words = ['thanks', 'thx', 'good boi', 'good boy', 'I love you', 'ily', 'love you']
+        self.thank_you_words = ['thanks', 'thank', 'thx', 'good', 'ily', 'love', 'adore', 'like']
+        self.pineapple_worthy_words = ['pizza', 'plzza', 'p1zza', 'pizzã', 'pizz4', 'pizzá', 'pineapple', 'ananas',
+                                       'ананас', '🍍']
         self.game_object = None
         self.data_wrapper = Datawrapper(access_token=os.getenv('DATAWRAPPER_TOKEN'))
 
@@ -34,11 +36,8 @@ class TotallyNotBot(discord.Client):
 
     async def on_message(self, message):
         if message.content is not None and any(
-                p in message.content.lower() for p in ['pizza', 'plzza', 'p1zza', 'pizzã', 'pizz4', 'pizzá']):
+                p in message.content.lower() for p in self.pineapple_worthy_words):
             await message.add_reaction('🍍')
-        if 'are you pro China' in message.content:
-            await message.channel.send('不我不是')
-            return
         for mention in message.mentions:
             if mention.id == self.user.id and len(message.mentions) == 1:
                 await self.reply_to_direct(message)
@@ -54,7 +53,8 @@ class TotallyNotBot(discord.Client):
             guild = message.channel.guild
             member_map = await TotallyNotBot.save_guild_member_map(guild, False)
             await self.send_dm(message.author, member_map)
-            await message.channel.send('I am a good boy, I updated your map! Check your dms')
+            await message.channel.send('I am a good boy, I updated your map! Check your dms', reference=message,
+                                       mention_author=False)
         elif actual_message == 'map iso':
             await message.channel.send('Please wait a second, I will look up all members and generate the map asap')
             guild = message.channel.guild
@@ -64,7 +64,7 @@ class TotallyNotBot(discord.Client):
             await message.channel.send('Please wait a second, I will look up all members and generate the map asap')
             guild_member_map = await TotallyNotBot.save_guild_member_map(message.channel.guild)
             self.update_datawrapper_map(guild_member_map)
-            await message.channel.send(file=discord.File('ovAEX.png'))
+            await message.channel.send(file=discord.File('ovAEX.png'), reference=message)
         elif actual_message == 'help':
             await self.send_dm(message.author,
                                message='To get map in dms, write \'map\'. '
@@ -77,9 +77,6 @@ class TotallyNotBot(discord.Client):
                 await message.channel.send(peepo_shy)
             else:
                 await message.channel.send('Trying my best ^_^')
-        else:
-            await message.channel.send('I am so sorry, I did not get what you are saying to me. You can ask me '
-                                       'for help any time though')
 
     @staticmethod
     async def send_dm(member, message=None, file=None):
@@ -105,7 +102,7 @@ class TotallyNotBot(discord.Client):
                         elif flag == 'CP':
                             country = pycountry.countries.get(alpha_2='FR')
                         else:
-                            print(flag)
+                            print(f'{flag} not found :(')
                             continue
                     elif country.alpha_3 == 'PRI':
                         country = pycountry.countries.get(alpha_2='US')
