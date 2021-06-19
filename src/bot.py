@@ -56,10 +56,12 @@ class TotallyNotBot(discord.Client):
             await self.send_dm(message.author, member_map)
             await message.channel.send('I am a good boy, I updated your map! Check your dms')
         elif actual_message == 'map iso':
+            await message.channel.send('Please wait a second, I will look up all members and generate the map asap')
             guild = message.channel.guild
             await TotallyNotBot.save_guild_member_map(guild)
             await self.send_dm(message.author, message='here is your map :heart:', file=f'{guild.id}.csv')
         elif actual_message == 'map png':
+            await message.channel.send('Please wait a second, I will look up all members and generate the map asap')
             guild_member_map = await TotallyNotBot.save_guild_member_map(message.channel.guild)
             self.update_datawrapper_map(guild_member_map)
             await message.channel.send(file=discord.File('ovAEX.png'))
@@ -67,6 +69,7 @@ class TotallyNotBot(discord.Client):
             await self.send_dm(message.author,
                                message='To get map in dms, write \'map\'. '
                                        'To get map as .csv with iso codes, write \'map iso\''
+                                       'To get map as image, write \'map png\''
                                        ' I generate csv for https://www.datawrapper.de/maps/')
         elif any([x in actual_message.lower() for x in self.thank_you_words]):
             peepo_shy = get(message.channel.guild.emojis, name='Peepo_Shy')
@@ -124,4 +127,4 @@ class TotallyNotBot(discord.Client):
     def update_datawrapper_map(self, guild_member_map):
         self.data_wrapper.add_data('ovAEX', data=pd.read_csv(StringIO(f'ISO-Code,count\n{guild_member_map}')))
         self.data_wrapper.publish_chart('ovAEX')
-        self.data_wrapper.export_chart('ovAEX', filepath='ovAEX.png')
+        self.data_wrapper.export_chart('ovAEX', filepath='ovAEX.png', width=1240)
