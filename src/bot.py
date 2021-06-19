@@ -68,9 +68,11 @@ class TotallyNotBot(discord.Client):
         elif actual_message == 'help':
             await self.send_dm(message.author,
                                message='To get map in dms, write \'map\'. '
-                                       'To get map as .csv with iso codes, write \'map iso\''
-                                       'To get map as image, write \'map png\''
-                                       ' I generate csv for https://www.datawrapper.de/maps/')
+                                       'To get map as .csv with iso codes, write \'map iso\' '
+                                       'To get map as image, write \'map png\' '
+                                       'I generate csv for https://www.datawrapper.de/maps/')
+            await message.channel.send('Instructions are top secret, but I have sent them in your dms.',
+                                       reference=message, mention_author=False)
         elif any([x in actual_message.lower() for x in self.thank_you_words]):
             peepo_shy = get(message.channel.guild.emojis, name='Peepo_Shy')
             if peepo_shy:
