@@ -127,4 +127,4 @@ class TotallyNotBot(discord.Client):
     def update_datawrapper_map(self, guild_member_map):
         self.data_wrapper.add_data('ovAEX', data=pd.read_csv(StringIO(f'ISO-Code,count\n{guild_member_map}')))
         self.data_wrapper.publish_chart('ovAEX')
-        self.data_wrapper.export_chart('ovAEX', filepath='ovAEX.png', width=1240)
+        self.data_wrapper.export_chart('ovAEX', filepath='ovAEX.png', width=666)
