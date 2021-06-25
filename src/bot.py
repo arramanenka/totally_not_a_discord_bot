@@ -13,7 +13,6 @@ class TotallyNotBot(discord.Client):
         self.thank_you_words = ['thanks', 'thank', 'thx', 'good', 'ily', 'love', 'adore', 'like']
         self.pineapple_worthy_words = ['pizza', 'plzza', 'p1zza', 'pizzã', 'pizz4', 'pizzá', 'pineapple', 'ananas',
                                        'ананас', '🍍']
-        self.game_object = None
         self.map_generator = MapGenerator()
 
     async def on_ready(self):
@@ -35,15 +34,9 @@ class TotallyNotBot(discord.Client):
         if actual_message.startswith('!'):
             return
         elif actual_message == 'map iso':
-            await message.channel.send('Please wait a second, I will look up all members and generate the map asap')
-            guild = message.channel.guild
-            await MapGenerator.save_guild_member_map(guild)
-            await self.send_dm(message.author, message='here is your map :heart:', file=f'{guild.id}.csv')
+            await self.create_map(message)
         elif actual_message == 'map png':
-            await message.channel.send('Please wait a second, I will look up all members and generate the map asap')
-            guild_member_map = await MapGenerator.save_guild_member_map(message.channel.guild)
-            self.map_generator.update_datawrapper_map(guild_member_map)
-            await message.channel.send(file=discord.File('ovAEX.png'), reference=message)
+            await self.create_map(message, True)
         elif actual_message == 'help':
             await self.send_dm(message.author,
                                message='To get map as .csv with iso codes, write \'map iso\' '
@@ -57,6 +50,15 @@ class TotallyNotBot(discord.Client):
                 await message.add_reaction(peepo_shy)
             else:
                 await message.add_reaction('😳')
+
+    async def create_map(self, message, image=False):
+        await message.channel.send('Please wait a second, I will look up all members and generate the map asap')
+        guild_member_map = await MapGenerator.save_guild_member_map(message.channel.guild)
+        if image:
+            self.map_generator.update_datawrapper_map(guild_member_map)
+            await message.channel.send(file=discord.File('ovAEX.png'), reference=message)
+        else:
+            await self.send_dm(message.author, message='here is your map ❤️', file=f'{message.channel.guild.id}.csv')
 
     @staticmethod
     async def send_dm(member, message=None, file=None):
