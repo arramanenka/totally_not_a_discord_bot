@@ -1,14 +1,9 @@
-import os
 import re
-from io import StringIO
 
 import discord
-import pandas as pd
-import pycountry
-from datawrapper import Datawrapper
 from discord.utils import get
 
-from src.util import find_flags
+from src.map import MapGenerator
 
 
 class TotallyNotBot(discord.Client):
@@ -19,7 +14,7 @@ class TotallyNotBot(discord.Client):
         self.pineapple_worthy_words = ['pizza', 'plzza', 'p1zza', 'pizzã', 'pizz4', 'pizzá', 'pineapple', 'ananas',
                                        'ананас', '🍍']
         self.game_object = None
-        self.data_wrapper = Datawrapper(access_token=os.getenv('DATAWRAPPER_TOKEN'))
+        self.map_generator = MapGenerator()
 
     async def on_ready(self):
         print(f'{self.user} has connected to Discord!')
@@ -42,12 +37,12 @@ class TotallyNotBot(discord.Client):
         elif actual_message == 'map iso':
             await message.channel.send('Please wait a second, I will look up all members and generate the map asap')
             guild = message.channel.guild
-            await TotallyNotBot.save_guild_member_map(guild)
+            await MapGenerator.save_guild_member_map(guild)
             await self.send_dm(message.author, message='here is your map :heart:', file=f'{guild.id}.csv')
         elif actual_message == 'map png':
             await message.channel.send('Please wait a second, I will look up all members and generate the map asap')
-            guild_member_map = await TotallyNotBot.save_guild_member_map(message.channel.guild)
-            self.update_datawrapper_map(guild_member_map)
+            guild_member_map = await MapGenerator.save_guild_member_map(message.channel.guild)
+            self.map_generator.update_datawrapper_map(guild_member_map)
             await message.channel.send(file=discord.File('ovAEX.png'), reference=message)
         elif actual_message == 'help':
             await self.send_dm(message.author,
@@ -70,43 +65,3 @@ class TotallyNotBot(discord.Client):
             await member.dm_channel.send(file=discord.File(filename=file, fp=file))
         else:
             await member.dm_channel.send(message)
-
-    @staticmethod
-    async def save_guild_member_map(guild, use_iso=True):
-        flag_dict = dict()
-        await guild.chunk()
-        for m in guild.members:
-            if not m.bot:
-                flags = find_flags(m.nick)
-                added_flags = []
-                for flag in set(flags):
-                    country = pycountry.countries.get(alpha_2=flag)
-                    if country is None:
-                        if flag == 'EA':
-                            country = pycountry.countries.get(alpha_2='ES')
-                        elif flag == 'CP':
-                            country = pycountry.countries.get(alpha_2='FR')
-                        else:
-                            print(f'{flag} not found :(')
-                            continue
-                    elif country.alpha_3 == 'PRI':
-                        country = pycountry.countries.get(alpha_2='US')
-                    country_name = country.alpha_3
-                    if country_name not in added_flags:
-                        added_flags.append(country_name)
-                        flag_dict.setdefault(country_name, 0)
-                        flag_dict[country_name] = flag_dict[country_name] + 1
-        results = []
-        for key in sorted(flag_dict, key=flag_dict.get):
-            result = f'\n{key if use_iso else pycountry.countries.get(alpha_3=key).name},{flag_dict[key]}'
-            results.append(result)
-        output = ''.join(results)
-        with open(f'{guild.id}.csv', mode='w+', encoding='utf-8') as csv_file:
-            csv_file.write('ISO-Code,count')
-            csv_file.write(output)
-        return output
-
-    def update_datawrapper_map(self, guild_member_map):
-        self.data_wrapper.add_data('ovAEX', data=pd.read_csv(StringIO(f'ISO-Code,count\n{guild_member_map}')))
-        self.data_wrapper.publish_chart('ovAEX')
-        self.data_wrapper.export_chart('ovAEX', filepath='ovAEX.png', width=666)
