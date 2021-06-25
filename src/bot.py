@@ -59,9 +59,9 @@ class TotallyNotBot(discord.Client):
         elif any([x in actual_message.lower() for x in self.thank_you_words]):
             peepo_shy = get(message.channel.guild.emojis, name='Peepo_Shy')
             if peepo_shy:
-                await message.channel.send(peepo_shy)
+                await message.add_reaction(peepo_shy)
             else:
-                await message.channel.send('Trying my best ^_^')
+                await message.add_reaction('😳')
 
     @staticmethod
     async def send_dm(member, message=None, file=None):
