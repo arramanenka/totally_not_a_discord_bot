@@ -1,11 +1,11 @@
 import os
-
-from datawrapper import Datawrapper
 from io import StringIO
+
 import pandas as pd
 import pycountry
+from datawrapper import Datawrapper
 
-from src.util import find_flags
+from src.util import insert_flags_from_nick
 
 
 class MapGenerator:
@@ -21,25 +21,7 @@ class MapGenerator:
         await guild.chunk()
         for m in guild.members:
             if not m.bot:
-                flags = find_flags(m.nick)
-                added_flags = []
-                for flag in set(flags):
-                    country = pycountry.countries.get(alpha_2=flag)
-                    if country is None:
-                        if flag == 'EA':
-                            country = pycountry.countries.get(alpha_2='ES')
-                        elif flag == 'CP':
-                            country = pycountry.countries.get(alpha_2='FR')
-                        else:
-                            print(f'{flag} not found :(')
-                            continue
-                    elif country.alpha_3 == 'PRI':
-                        country = pycountry.countries.get(alpha_2='US')
-                    country_name = country.alpha_3
-                    if country_name not in added_flags:
-                        added_flags.append(country_name)
-                        flag_dict.setdefault(country_name, 0)
-                        flag_dict[country_name] = flag_dict[country_name] + 1
+                insert_flags_from_nick(flag_dict, m.nick)
         results = []
         for key in sorted(flag_dict, key=flag_dict.get):
             result = f'\n{key if use_iso else pycountry.countries.get(alpha_3=key).name},{flag_dict[key]}'
