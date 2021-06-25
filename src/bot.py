@@ -15,11 +15,6 @@ class TotallyNotBot(discord.Client):
 
     def __init__(self, *, loop=None, **options):
         super().__init__(loop=loop, **options)
-        self.guild_id = int(os.getenv('GUILD_ID') or '698825558712254494')
-        self.open_dm_rule_message_id = int(os.getenv('OPEN_DM_RULE_MESSAGE_ID') or '708210555156037662')
-        self.rule_channel_name = os.getenv('RULE_CHANNEL_NAME') or 'rules'
-        self.rule_channel = None
-        self.dm_rule_guild = None
         self.thank_you_words = ['thanks', 'thank', 'thx', 'good', 'ily', 'love', 'adore', 'like']
         self.pineapple_worthy_words = ['pizza', 'plzza', 'p1zza', 'pizzã', 'pizz4', 'pizzá', 'pineapple', 'ananas',
                                        'ананас', '🍍']
@@ -28,11 +23,6 @@ class TotallyNotBot(discord.Client):
 
     async def on_ready(self):
         print(f'{self.user} has connected to Discord!')
-        guild = discord.utils.find(lambda g: g.id == self.guild_id, self.guilds)
-        self.dm_rule_guild = guild
-        if guild and self.open_dm_rule_message_id is not None:
-            self.rule_channel = discord.utils.find(lambda c: c.name == self.rule_channel_name, guild.channels)
-            await self.save_guild_member_map(guild)
 
     async def on_message(self, message):
         if message.content is not None and any(
@@ -49,12 +39,6 @@ class TotallyNotBot(discord.Client):
         actual_message = re.sub(r'<.*>', '', message.content).strip()
         if actual_message.startswith('!'):
             return
-        if actual_message == 'map':
-            guild = message.channel.guild
-            member_map = await TotallyNotBot.save_guild_member_map(guild, False)
-            await self.send_dm(message.author, member_map)
-            await message.channel.send('I am a good boy, I updated your map! Check your dms', reference=message,
-                                       mention_author=False)
         elif actual_message == 'map iso':
             await message.channel.send('Please wait a second, I will look up all members and generate the map asap')
             guild = message.channel.guild
@@ -67,8 +51,7 @@ class TotallyNotBot(discord.Client):
             await message.channel.send(file=discord.File('ovAEX.png'), reference=message)
         elif actual_message == 'help':
             await self.send_dm(message.author,
-                               message='To get map in dms, write \'map\'. '
-                                       'To get map as .csv with iso codes, write \'map iso\' '
+                               message='To get map as .csv with iso codes, write \'map iso\' '
                                        'To get map as image, write \'map png\' '
                                        'I generate csv for https://www.datawrapper.de/maps/')
             await message.channel.send('Instructions are top secret, but I have sent them in your dms.',
