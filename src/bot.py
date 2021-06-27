@@ -41,7 +41,7 @@ class TotallyNotBot(discord.Client):
             await self.send_dm(message.author,
                                message='To get map as .csv with iso codes, write \'map iso\' '
                                        'To get map as image, write \'map png\' '
-                                       'I generate csv for https://www.datawrapper.de/maps/')
+                                       'I generate maps based on country flags I detect in people\'s nicknames')
             await message.channel.send('Instructions are top secret, but I have sent them in your dms.',
                                        reference=message, mention_author=False)
         elif any([x in actual_message.lower() for x in self.thank_you_words]):
