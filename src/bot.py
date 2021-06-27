@@ -13,15 +13,25 @@ class TotallyNotBot(discord.Client):
         self.thank_you_words = ['thanks', 'thank', 'thx', 'good', 'ily', 'love', 'adore', 'like']
         self.pineapple_worthy_words = ['pizza', 'plzza', 'p1zza', 'pizzã', 'pizz4', 'pizzá', 'pineapple', 'ananas',
                                        'ананас', '🍍']
+        self.celebration_words = ['congratulations', 'congrats']
+        self.weed_words = ['420', 'pot']
         self.map_generator = MapGenerator()
 
     async def on_ready(self):
         print(f'{self.user} has connected to Discord!')
 
     async def on_message(self, message):
-        if message.content is not None and any(
-                p in message.content.lower() for p in self.pineapple_worthy_words):
-            await message.add_reaction('🍍')
+        if message.content is not None:
+            if any(p in message.content.lower() for p in self.pineapple_worthy_words):
+                await message.add_reaction('🍍')
+            if any(p in message.content.lower() for p in self.weed_words):
+                await message.add_reaction('🥦')
+            if 'eh' in message.content:
+                await message.add_reaction('🇨🇦')
+            if any(p in message.content.lower() for p in self.celebration_words):
+                await message.add_reaction('🎉')
+                await message.add_reaction('✨')
+
         for mention in message.mentions:
             if mention.id == self.user.id and len(message.mentions) == 1:
                 await self.reply_to_direct(message)
