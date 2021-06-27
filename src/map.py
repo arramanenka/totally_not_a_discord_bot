@@ -1,9 +1,10 @@
-import os
 from io import StringIO
+from random import choice
 
 import pandas as pd
+import plotly.graph_objects as go
 import pycountry
-from datawrapper import Datawrapper
+from plotly.graph_objs.layout import Title
 
 from src.util import insert_flags_from_nick
 
@@ -12,8 +13,7 @@ class MapGenerator:
 
     def __init__(self) -> None:
         super().__init__()
-        # TODO: decouple implementation from datawrapper
-        self.data_wrapper = Datawrapper(access_token=os.getenv('DATAWRAPPER_TOKEN'))
+        self.good_colors = ['teal', 'tealgrn', 'temps', 'algae', 'peach', 'darkmint']
 
     @staticmethod
     async def save_guild_member_map(guild, use_iso=True):
@@ -32,7 +32,26 @@ class MapGenerator:
             csv_file.write(output)
         return output
 
-    def update_datawrapper_map(self, guild_member_map):
-        self.data_wrapper.add_data('ovAEX', data=pd.read_csv(StringIO(f'ISO-Code,count\n{guild_member_map}')))
-        self.data_wrapper.publish_chart('ovAEX')
-        self.data_wrapper.export_chart('ovAEX', filepath='ovAEX.png', width=666)
+    def save_map_as_png(self, guild_member_map, file_name, title):
+        df = pd.read_csv(StringIO(f'ISO-Code,count\n{guild_member_map}'))
+
+        fig = go.Figure(
+            data=go.Choropleth(
+                locations=df['ISO-Code'],
+                z=df['count'].astype(float),
+                colorscale=choice(self.good_colors),
+                autocolorscale=False,
+                marker_line_color='white'
+            ),
+            layout=go.Layout(geo={
+                'bgcolor': '#fffaf0',
+                'landcolor': '#fffaf0'
+            },
+                title=Title(text=title, xanchor='center', x=0.5, yanchor='top', y=0.9,
+                            font={"size": 40, "color": "Black"}),
+                font={"size": 40, "color": "Grey"},
+                titlefont={"size": 40, "color": "Grey"},
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)'
+            ))
+        fig.write_image(file_name, width=3840, height=2160)

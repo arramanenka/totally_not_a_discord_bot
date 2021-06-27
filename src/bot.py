@@ -55,8 +55,9 @@ class TotallyNotBot(discord.Client):
         await message.channel.send('Please wait a second, I will look up all members and generate the map asap')
         guild_member_map = await MapGenerator.save_guild_member_map(message.channel.guild)
         if image:
-            self.map_generator.update_datawrapper_map(guild_member_map)
-            await message.channel.send(file=discord.File('ovAEX.png'), reference=message)
+            image_name = f'{message.channel.guild.name}.png'
+            self.map_generator.save_map_as_png(guild_member_map, image_name, message.channel.guild.name)
+            await message.channel.send(file=discord.File(image_name), reference=message)
         else:
             await self.send_dm(message.author, message='here is your map ❤️', file=f'{message.channel.guild.id}.csv')
 

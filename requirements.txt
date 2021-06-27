@@ -14,3 +14,6 @@ yarl==1.4.2
 datawrapper~=0.4.3
 pandas~=1.0.5
 Flask~=1.1.2
+
+plotly~=5.0.0
+kaleido~=0.2.1
