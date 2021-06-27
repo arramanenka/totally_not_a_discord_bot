@@ -27,7 +27,7 @@ class TotallyNotBot(discord.Client):
                 await message.add_reaction('🍍')
             if any(p in lowered for p in self.weed_words):
                 await message.add_reaction('🥦')
-            if re.match(r'\b(eh|sorry)\b', lowered):
+            if re.match(r'.*\b(eh|sorry)\b.*', lowered):
                 await message.add_reaction('🇨🇦')
             if any(p in lowered for p in self.celebration_words):
                 await message.add_reaction('🎉')
