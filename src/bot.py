@@ -22,13 +22,14 @@ class TotallyNotBot(discord.Client):
 
     async def on_message(self, message):
         if message.content is not None:
-            if any(p in message.content.lower() for p in self.pineapple_worthy_words):
+            lowered = message.content.lower()
+            if any(p in lowered for p in self.pineapple_worthy_words):
                 await message.add_reaction('🍍')
-            if any(p in message.content.lower() for p in self.weed_words):
+            if any(p in lowered for p in self.weed_words):
                 await message.add_reaction('🥦')
-            if 'eh' in message.content:
+            if ' eh' in lowered:
                 await message.add_reaction('🇨🇦')
-            if any(p in message.content.lower() for p in self.celebration_words):
+            if any(p in lowered for p in self.celebration_words):
                 await message.add_reaction('🎉')
                 await message.add_reaction('✨')
 
