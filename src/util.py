@@ -34,8 +34,6 @@ def find_flags(flag_string):
 
 
 def check_presence(item, key, dictionary):
-    if dictionary is None:
-        return False
-    if key not in dictionary:
+    if dictionary is None or key not in dictionary:
         return False
     return item in dictionary[key]
