@@ -8,7 +8,7 @@ emoji-country-flag==1.2.1
 idna==2.9
 multidict==4.7.6
 pycountry==19.8.18
-websockets==8.1
+websockets==9.1
 yarl==1.4.2
 
 datawrapper~=0.4.3
